@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Transkripsi Suara — percubaan.com</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0a14;
+      --surface: #111128;
+      --border: #1e1e3a;
+      --accent: #6366f1;
+      --accent-hover: #4f46e5;
+      --accent-glow: rgba(99,102,241,0.25);
+      --red: #ef4444;
+      --red-glow: rgba(239,68,68,0.25);
+      --green: #22c55e;
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --card: #141430;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+    header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; }
+    header h1 span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 0.4rem; font-size: 0.9rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      width: 100%;
+      max-width: 640px;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Waveform */
+    #waveform {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      height: 60px;
+      margin-bottom: 1.5rem;
+    }
+    .bar {
+      width: 4px;
+      border-radius: 2px;
+      background: var(--accent);
+      height: 8px;
+      transition: height 0.05s ease;
+      opacity: 0.4;
+    }
+    .bar.active { opacity: 1; }
+
+    /* Record button */
+    .btn-record {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      width: 100%;
+      padding: 0.85rem 1.5rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-record.idle {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .btn-record.idle:hover { background: var(--accent-hover); }
+    .btn-record.recording {
+      background: var(--red);
+      color: #fff;
+      box-shadow: 0 0 20px var(--red-glow);
+      animation: pulse-record 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-record {
+      0%, 100% { box-shadow: 0 0 20px var(--red-glow); }
+      50%       { box-shadow: 0 0 36px rgba(239,68,68,0.5); }
+    }
+    .btn-record:disabled { opacity: 0.5; cursor: not-allowed; animation: none; }
+
+    /* Dot */
+    .dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+    .dot.blink { animation: blink 1s step-start infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* Status */
+    #status {
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 0.8rem;
+      min-height: 1.2em;
+    }
+    #status.error { color: var(--red); }
+    #status.success { color: var(--green); }
+
+    /* Result */
+    #result-card { display: none; }
+    #result-card.visible { display: block; }
+
+    #transcript {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+      min-height: 4rem;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+    .btn-sm {
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-sm:hover { background: var(--border); }
+
+    /* History */
+    #history-card h2 { font-size: 0.9rem; font-weight: 600; color: var(--muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    #history-list { list-style: none; display: flex; flex-direction: column; gap: 0.6rem; }
+    #history-list li {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+      font-size: 0.88rem;
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+    }
+    #history-list li .ts { color: var(--muted); font-size: 0.75rem; white-space: nowrap; padding-top: 0.1rem; }
+    #history-list li .txt { flex: 1; word-break: break-word; }
+
+    .empty-state { color: var(--muted); font-size: 0.85rem; text-align: center; padding: 1rem 0; }
+
+    footer { margin-top: 2rem; color: var(--muted); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Transkripsi <span>Suara</span></h1>
+  <p>Rakam audio Bahasa Melayu — ditranskripsi oleh Whisper</p>
+</header>
+
+<div class="card">
+  <div id="waveform"></div>
+
+  <button id="btn-record" class="btn-record idle">
+    <span class="dot" id="dot"></span>
+    <span id="btn-label">Mula Rakam</span>
+  </button>
+
+  <div id="status"></div>
+</div>
+
+<div class="card" id="result-card">
+  <div id="transcript"></div>
+  <div class="result-actions">
+    <button class="btn-sm" id="btn-copy">Salin</button>
+    <button class="btn-sm" id="btn-clear-result">Padam</button>
+  </div>
+</div>
+
+<div class="card" id="history-card">
+  <h2>Sejarah</h2>
+  <ul id="history-list">
+    <li class="empty-state" id="empty-msg">Tiada transkripsi lagi.</li>
+  </ul>
+</div>
+
+<footer>percubaan.com &mdash; Sistem AI Tempatan</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

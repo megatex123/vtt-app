@@ -1,0 +1,9 @@
+flask
+flask-cors
+openai-whisper
+python-dotenv
+requests
+torch
+numpy
+transformers
+librosa
