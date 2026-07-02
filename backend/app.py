@@ -1,4 +1,6 @@
-import sys; sys.path.insert(0, '/home/penyahpepijat/py314-packages')
+import sys
+if sys.version_info >= (3, 14):
+    sys.path.insert(1, '/home/penyahpepijat/py314-packages')
 import os
 import logging
 
