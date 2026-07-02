@@ -1,6 +1,6 @@
+import sys; sys.path.insert(0, '/home/penyahpepijat/py314-packages')
 import os
 import logging
-import sys
 
 from dotenv import load_dotenv
 
